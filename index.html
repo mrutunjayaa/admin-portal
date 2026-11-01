@@ -1,0 +1,2185 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mrutunjaya — CRM, Bug Bounty, Hotel & Planner</title>
+  
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+  
+  <!-- ChartJS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    /* ==========================================================================
+       1. CSS VARIABLES & DESIGN SYSTEM (DARK & LIGHT THEMES)
+       ========================================================================== */
+    :root[data-theme="dark"] {
+      --bg-primary: #0c0d10;
+      --bg-secondary: #1a1b20;
+      --bg-tertiary: #27282e;
+      --text-primary: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --gold: #ffffff;
+      --gold-light: #f4f4f5;
+      --gold-alpha: rgba(255, 255, 255, 0.1);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-light: rgba(255, 255, 255, 0.03);
+      --success: #25D366;
+      --success-alpha: rgba(37, 211, 102, 0.15);
+      --danger: #ef4444;
+      --warning: #fdb630;
+      --info: #3b82f6;
+      --sidebar-width: 260px;
+      --sidebar-collapsed: 78px;
+      --topbar-height: 70px;
+      --shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+      --glass: rgba(12, 13, 16, 0.8);
+      --glass-blur: blur(16px);
+      --card-bg: #1a1b20;
+      --btn-text: #000000;
+      --purple-text: #a78bfa;
+      --badge-warning-text: var(--warning);
+    }
+
+    :root[data-theme="light"] {
+      --bg-primary: #f0fdf4;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #dcfce7;
+      --text-primary: #064e3b;
+      --text-secondary: #0f766e;
+      --text-muted: #64748b;
+      --gold: #10b981;
+      --gold-light: #34d399;
+      --gold-alpha: rgba(16, 185, 129, 0.15);
+      --border: rgba(16, 185, 129, 0.2);
+      --border-light: rgba(0, 0, 0, 0.05);
+      --success: #25D366;
+      --success-alpha: rgba(37, 211, 102, 0.15);
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-width: 260px;
+      --sidebar-collapsed: 78px;
+      --topbar-height: 70px;
+      --shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.2);
+      --glass: rgba(255, 255, 255, 0.85);
+      --glass-blur: blur(16px);
+      --card-bg: #ffffff;
+      --btn-text: #ffffff;
+      --purple-text: #7c3aed;
+      --badge-warning-text: #b45309;
+    }
+
+    /* Font overrides */
+    .material-icons-round {
+      font-family: 'Material Symbols Rounded', 'Material Icons Round' !important;
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--gold);
+    }
+
+    h1, h2, h3, h4, .title-font {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+       2. LAYOUT: SIDEBAR, TOPBAR & VIEW CONTROLLER
+       ========================================================================== */
+    .app-wrapper {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Sidebar Styles */
+    .sidebar {
+      width: var(--sidebar-width);
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 100;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-brand {
+      height: var(--topbar-height);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .sidebar-brand i {
+      color: var(--gold);
+      font-size: 1.8rem;
+    }
+
+    .sidebar-brand span {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .sidebar-brand span span {
+      color: var(--gold);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 8px;
+    }
+
+    .nav-label {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      padding: 12px 12px 6px 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .sidebar-category-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 12px 6px 12px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s ease;
+      margin-top: 6px;
+    }
+    .sidebar-category-header:hover {
+      color: var(--gold-light);
+    }
+    .sidebar-category-links {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding-left: 6px;
+    }
+    .sidebar-category-links.expanded {
+      max-height: 600px;
+    }
+    .sidebar-category-header i.chevron {
+      font-size: 1.1rem;
+      transition: transform 0.3s ease;
+      color: var(--text-muted);
+    }
+    .sidebar-category-header.active-header i.chevron {
+      transform: rotate(180deg);
+      color: var(--gold);
+    }
+    
+    /* Collapsed state adjustments */
+    .sidebar.collapsed .sidebar-category-header span,
+    .sidebar.collapsed .sidebar-category-header i.chevron {
+      display: none;
+    }
+    .sidebar.collapsed .sidebar-category-links {
+      max-height: none !important;
+      padding-left: 0;
+    }
+    .sidebar.collapsed .sidebar-category-wrapper {
+      margin-bottom: 10px;
+    }
+
+    .sidebar-nav-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 14px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 3px;
+      gap: 12px;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .sidebar-nav-item i {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-nav-item:hover {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .sidebar-nav-item:hover i {
+      color: var(--gold);
+    }
+
+    .sidebar-nav-item.active {
+      background-color: var(--gold-alpha);
+      color: var(--gold-light);
+      font-weight: 600;
+      border: 1px solid var(--border);
+    }
+
+    .sidebar-nav-item.active i {
+      color: var(--gold);
+    }
+
+    .sidebar-footer {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-tertiary);
+    }
+
+    .sidebar-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--gold);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .sidebar-user-details {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .sidebar-user-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    .sidebar-user-role {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+
+    /* Collapsed Sidebar overrides */
+    .sidebar.collapsed {
+      width: var(--sidebar-collapsed);
+    }
+    .sidebar.collapsed .sidebar-brand span,
+    .sidebar.collapsed .nav-label,
+    .sidebar.collapsed .sidebar-nav-item span,
+    .sidebar.collapsed .sidebar-footer {
+      display: none;
+    }
+    .sidebar.collapsed .sidebar-nav-item {
+      justify-content: center;
+      padding: 12px;
+    }
+
+    /* Main Panel Layout */
+    .main-panel {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar.collapsed + .main-panel {
+      margin-left: var(--sidebar-collapsed);
+    }
+
+    /* Topbar */
+    .topbar {
+      height: var(--topbar-height);
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 99;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .toggle-sidebar-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.3rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px;
+      border-radius: 6px;
+    }
+
+    .toggle-sidebar-btn:hover {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .page-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      padding: 6px 12px;
+      border-radius: 8px;
+      gap: 8px;
+      width: 220px;
+    }
+
+    .search-box input {
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 0.82rem;
+      width: 100%;
+    }
+
+    .search-box i {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .topbar-action-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      border-radius: 8px;
+      position: relative;
+    }
+
+    .topbar-action-btn:hover {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .topbar-action-btn .badge {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--danger);
+    }
+
+    .user-profile-menu {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    /* Login View Styles */
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      padding: 20px;
+    }
+
+    .login-card {
+      background: var(--glass);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border);
+      padding: 40px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeInUp 0.5s ease-out;
+    }
+
+    .login-header {
+      text-align: center;
+    }
+
+    .login-header i {
+      font-size: 3rem;
+      color: var(--gold);
+      margin-bottom: 12px;
+    }
+
+    .login-header h2 {
+      font-size: 1.7rem;
+      margin-bottom: 6px;
+    }
+
+    .login-header p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* ==========================================================================
+       3. ATOMS & UTILITIES: BUTTONS, CARDS, INPUTS, TABLES & BADGES
+       ========================================================================== */
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title i {
+      color: var(--gold);
+      font-size: 1.1rem;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .col-span-2 { grid-column: span 2; }
+    
+    @media(max-width: 1024px) {
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media(max-width: 768px) {
+      .grid-4, .grid-3, .grid-2 { grid-template-columns: 1fr; }
+      .col-span-2 { grid-column: span 1; }
+      .sidebar { display: none; }
+      .main-panel { margin-left: 0 !important; }
+    }
+
+    /* Inputs */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control, select, textarea {
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border-light);
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      outline: none;
+      width: 100%;
+    }
+
+    .form-control:focus, select:focus, textarea:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 2px var(--gold-alpha);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      gap: 8px;
+      border: 1px solid transparent;
+      outline: none;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background-color: var(--gold);
+      color: var(--btn-text);
+      border-color: var(--gold);
+      font-weight: 600;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--gold-light);
+      border-color: var(--gold-light);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-color: var(--border-light);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--border-light);
+    }
+
+    .btn-danger {
+      background-color: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      filter: brightness(1.1);
+    }
+
+    /* Table styles */
+    .table-responsive {
+      overflow-x: auto;
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    th {
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border);
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.5px;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
+      color: var(--text-primary);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background-color: var(--bg-tertiary);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    .badge-success { background-color: rgba(16, 185, 129, 0.12); color: var(--success); }
+    .badge-danger { background-color: rgba(239, 68, 68, 0.12); color: var(--danger); }
+    .badge-warning { background-color: rgba(245, 158, 11, 0.12); color: var(--badge-warning-text, var(--warning)); }
+    .badge-info { background-color: rgba(59, 130, 246, 0.12); color: var(--info); }
+    .badge-gold { background-color: var(--gold-alpha); color: var(--gold-light); }
+    .badge-purple { background-color: rgba(139, 92, 246, 0.15); color: var(--purple-text, #a78bfa); }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 550px;
+      box-shadow: var(--shadow);
+      animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-body {
+      padding: 20px;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      background-color: var(--bg-tertiary);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* ==========================================================================
+       4. ANIMATIONS
+       ========================================================================== */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleUp {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Widgets & Stats styling */
+    .stat-widget {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .stat-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .stat-label {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .stat-val {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-icon-wrap {
+      width: 44px;
+      height: 44px;
+      background-color: var(--gold-alpha);
+      color: var(--gold-light);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      border: 1px solid var(--border);
+    }
+
+    /* Calendar Grid */
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+
+    .cal-day-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding: 6px 0;
+      text-transform: uppercase;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1.2;
+      background-color: var(--bg-tertiary);
+      border-radius: 6px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: flex-end;
+      font-size: 0.78rem;
+      border: 1px solid var(--border-light);
+      cursor: pointer;
+    }
+
+    .cal-cell.today {
+      border-color: var(--gold);
+      background-color: var(--gold-alpha);
+    }
+
+    .cal-cell.other-month {
+      opacity: 0.3;
+    }
+
+    .cal-events {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-top: 4px;
+    }
+
+    .cal-event-dot {
+      height: 3px;
+      border-radius: 2px;
+      width: 100%;
+    }
+
+    /* Heatmap Grid */
+    .heatmap-grid {
+      display: grid;
+      grid-template-columns: repeat(24, 1fr);
+      gap: 4px;
+    }
+
+    .heatmap-cell {
+      aspect-ratio: 1;
+      border-radius: 2px;
+      background-color: var(--bg-tertiary);
+    }
+
+    /* Theme Switcher slider */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 34px;
+      transition: .3s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: var(--gold);
+      border-radius: 50%;
+      transition: .3s;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    /* Clock Styling */
+    .clock-widget {
+      text-align: center;
+      padding: 10px;
+    }
+    
+    .clock-time {
+      font-size: 2rem;
+      font-weight: 700;
+      font-family: 'Outfit', sans-serif;
+      color: var(--gold-light);
+      letter-spacing: 1px;
+    }
+
+    .clock-date {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Tab Layouts */
+    .tab-nav {
+      display: flex;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 18px;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .tab-btn.active {
+      color: var(--gold-light);
+      border-bottom-color: var(--gold);
+    }
+
+    /* Habit Checker Card */
+    .habit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-light);
+      border-radius: 8px;
+      margin-bottom: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .habit-item:has(.habit-checkbox.checked) {
+      background: var(--success-alpha);
+      border-color: var(--success);
+    }
+    .habit-checkbox {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.75rem;
+    }
+    .habit-checkbox.checked {
+      background-color: var(--success);
+      border-color: var(--success);
+    }
+
+    /* Hotel room grid styles */
+    .room-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+    }
+    .room-card {
+      border: 1px solid var(--border);
+      background-color: var(--bg-tertiary);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .room-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .room-card.available { border-top: 4px solid var(--success); }
+    .room-card.occupied { border-top: 4px solid var(--danger); }
+    .room-card.cleaning { border-top: 4px solid var(--warning); }
+    .room-num { font-size: 1.15rem; font-weight: 700; }
+    .room-type { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* Notification Tray */
+    .notification-tray {
+      position: absolute;
+      top: 60px;
+      right: 20px;
+      width: 280px;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      z-index: 100;
+      display: none;
+    }
+    .notification-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+    }
+    .notification-body {
+      max-height: 220px;
+      overflow-y: auto;
+    }
+    .notification-item {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-light);
+      font-size: 0.78rem;
+    }
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+    /* Custom Project Dropdown */
+    .custom-dropdown-container { position: relative; user-select: none; font-size: 0.9rem; }
+    .custom-dropdown-trigger { background: var(--bg-tertiary); border: 1px solid var(--border); border-radius: 6px; padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-primary); transition: border-color 0.2s; }
+    .custom-dropdown-trigger:hover { border-color: var(--gold-light); }
+    .custom-dropdown-menu { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 6px; margin-top: 4px; z-index: 9999; display: none; max-height: 280px; overflow-y: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+    .custom-dropdown-menu.show { display: block; }
+    .custom-dropdown-group-header { padding: 10px 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: var(--bg-tertiary); border-bottom: 1px solid var(--border); font-weight: 600; color: var(--gold-light); transition: background 0.2s; }
+    .custom-dropdown-group-header:hover { background: var(--bg-primary); }
+    .custom-dropdown-group-items { display: none; background: var(--bg-secondary); }
+    .custom-dropdown-group-items.show { display: block; }
+    .custom-dropdown-item { padding: 10px 14px 10px 30px; cursor: pointer; color: var(--text-secondary); transition: all 0.2s; border-bottom: 1px solid var(--border-light); }
+    .custom-dropdown-item:hover { color: var(--gold); background: rgba(201, 168, 76, 0.1); padding-left: 36px; }
+    .custom-dropdown-item.main-item { padding-left: 14px; font-weight: 600; color: var(--text-primary); }
+    .custom-dropdown-item.main-item:hover { padding-left: 20px; }
+    .custom-dropdown-item.selected { color: var(--gold); background: rgba(201, 168, 76, 0.1); border-left: 3px solid var(--gold); }
+  </style>
+</head>
+<body>
+
+  <div id="app-root">
+    <!-- View will be injected dynamically -->
+  </div>
+
+  <!-- Global Modal System -->
+  <div id="app-modal" class="modal-overlay" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <h3 id="modal-title">Modal Title</h3>
+        <button class="toggle-sidebar-btn" onclick="hideModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Forms and contents go here -->
+      </div>
+      <div class="modal-footer" id="modal-footer">
+        <button class="btn btn-secondary" onclick="hideModal()">Cancel</button>
+        <button class="btn btn-primary" id="modal-submit-btn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Popup Container -->
+  <div class="notification-tray" id="global-notifications">
+    <div class="notification-header">
+      <span>Notifications</span>
+      <a href="#" onclick="clearNotifications()" style="color:var(--gold);text-decoration:none;font-size:0.75rem;">Clear All</a>
+    </div>
+    <div class="notification-body" id="notification-body-content">
+      <div class="notification-item" style="color:var(--text-muted);text-align:center;padding:20px;">No notifications.</div>
+    </div>
+  </div>
+
+  <!-- ==========================================================================
+     5. FRONTEND SCRIPTS: DATABASE, ROUTING, CONTROLLERS & DATA SEEDS
+     ========================================================================== -->
+  <script>
+    /* ==========================================================================
+       GLOBAL STATE
+       ========================================================================== */
+    window.globalSelectedDate = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    
+    window.updateGlobalDate = function(val) {
+      if (val) {
+        window.globalSelectedDate = val;
+        const hash = window.location.hash.substring(1) || 'dashboard';
+        if (Router.routes[hash]) {
+          Router.routes[hash]();
+        }
+      }
+    };
+
+    window.getGlobalDateObj = function() {
+      if (!window.globalSelectedDate) return new Date();
+      const parts = window.globalSelectedDate.split('-');
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    };
+
+    /* ==========================================================================
+       DATABASE ADAPTER LAYER (localStorage / Google Apps Script)
+       ========================================================================== */
+    const DB = {
+      // In-Memory Local Cache
+      cache: {
+        Settings: [],
+        Finance: [],
+        Tasks: [],
+        BugBounty: [],
+        HotelBookings: [],
+        RestaurantOrders: [],
+        RestaurantInventory: [],
+        TourBookings: [],
+        Notes: [],
+        Employees: [],
+        Menu: [],
+        UserProfile: {},
+        Habits: []
+      },
+
+      isGasEnv() {
+        return typeof google !== 'undefined' && typeof google.script !== 'undefined';
+      },
+
+      async loadAll() {
+        if (this.isGasEnv()) {
+          return new Promise((resolve) => {
+            google.script.run.withSuccessHandler((data) => {
+              for (const table in data) {
+                this.cache[table] = data[table] || [];
+              }
+              this.migrateMenuOrders();
+              resolve();
+            }).getAllDatabaseData();
+          });
+        } else {
+          // Local storage logic
+          const stored = localStorage.getItem('saas_db');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            for (const table in this.cache) {
+              if (parsed[table] !== undefined) {
+                this.cache[table] = parsed[table];
+              }
+            }
+            // Auto-upgrade admin credentials and 2FA settings
+            if (this.cache.Settings) {
+              const u = this.cache.Settings.find(s => s.key === "admin_username");
+              if (u) {
+                u.value = "official.mrutunjaya@gmail.com";
+              } else {
+                this.cache.Settings.push({ key: "admin_username", value: "official.mrutunjaya@gmail.com" });
+              }
+
+              const p = this.cache.Settings.find(s => s.key === "admin_password");
+              if (p) {
+                p.value = "Mrutunjaya@782";
+              } else {
+                this.cache.Settings.push({ key: "admin_password", value: "Mrutunjaya@782" });
+              }
+
+              let twofa = this.cache.Settings.find(s => s.key === "2fa_enabled");
+              if (twofa) {
+                twofa.value = "true";
+              } else {
+                this.cache.Settings.push({ key: "2fa_enabled", value: "true" });
+              }
+              this.saveAllLocal();
+            }
+
+            // Remove old employee logins - only admin exists
+            this.cache.Employees = [];
+
+            // Auto-upgrade for existing users to seed Menu table
+            if (!this.cache.Menu || this.cache.Menu.length === 0) {
+              this.cache.Menu = [
+                { id: "m1", type: "label", label: "Dashboard", icon: "", target: "", adminOnly: "false", order: 1 },
+                { id: "m4", type: "link", label: "Daily Planner", icon: "checklist", target: "tasks", adminOnly: "false", order: 1.01 },
+                { id: "m11", type: "link", label: "Calendar", icon: "calendar_today", target: "calendar", adminOnly: "false", order: 1.02 },
+                { id: "m12", type: "link", label: "Notes Pad", icon: "sticky_note_2", target: "notes", adminOnly: "false", order: 1.03 },
+                { id: "m2", type: "link", label: "Dashboard", icon: "grid_view", target: "dashboard", adminOnly: "false", order: 1.04 },
+                { id: "m3", type: "link", label: "Finance Dashboard", icon: "account_balance_wallet", target: "finance", adminOnly: "true", order: 1.05 },
+                { id: "m14", type: "link", label: "Reports", icon: "description", target: "reports", adminOnly: "true", order: 1.06 },
+                { id: "m13", type: "link", label: "Analytics Panel", icon: "analytics", target: "analytics", adminOnly: "true", order: 1.07 },
+                
+                { id: "m_bb", type: "label", label: "Bug Bounty", icon: "", target: "", adminOnly: "true", order: 2 },
+                { id: "m5", type: "link", label: "Bugcrowd", icon: "bug_report", target: "bugbounty", adminOnly: "true", order: 2.01 },
+                { id: "m_h1", type: "link", label: "HackerOne", icon: "security", target: "hackerone", adminOnly: "true", order: 2.02 },
+                
+                { id: "m_ms", type: "label", label: "MS", icon: "", target: "", adminOnly: "false", order: 3 },
+  { id: "m_apnatt", type: "link", label: "Apna tour travels", icon: "commute", target: "apnatourtravels", adminOnly: "false", order: 3.01 },
+                
+                { id: "m_sys", type: "label", label: "Systting", icon: "", target: "", adminOnly: "false", order: 7 },
+                { id: "m16", type: "link", label: "Profile", icon: "account_circle", target: "profile", adminOnly: "false", order: 7.01 },
+                { id: "m17", type: "link", label: "Settings", icon: "settings", target: "settings", adminOnly: "false", order: 7.02 },
+                { id: "m18", type: "link", label: "Admin Panel", icon: "admin_panel_settings", target: "adminpanel", adminOnly: "true", order: 7.03 }
+              ];
+              this.saveAllLocal();
+            }
+            // Auto-seed UserProfile if missing
+            if (!this.cache.UserProfile || Object.keys(this.cache.UserProfile).length === 0) {
+              this.cache.UserProfile = {
+                firstName: "Mrutunjaya",
+                lastName: "Mahasuara",
+                phone: "9876543210",
+                email: "mrutunjaya@example.com",
+                address: "Bhubaneswar, Odisha",
+                website: "https://mrutunjaya.dev",
+                socials: {
+                  facebook: "https://facebook.com/mrutunjaya",
+                  twitter: "https://twitter.com/mrutunjaya",
+                  linkedin: "https://linkedin.com/in/mrutunjaya",
+                  instagram: "https://instagram.com/mrutunjaya"
+                },
+                notes: "Cybersecurity engineer, bug hunter, and software developer. Currently managing Mahasuara Tower operations.",
+                activityLog: [
+                  { timestamp: new Date().toISOString(), action: "Profile Initialized", details: "Profile defaults seeded successfully" }
+                ]
+              };
+              this.saveAllLocal();
+            }
+            // Auto-seed Habits if missing
+            if (!this.cache.Habits || this.cache.Habits.length === 0) {
+              this.cache.Habits = [
+                { id: "h1", title: "Wake up by 6:00 AM", completedDates: [] },
+                { id: "h2", title: "30 mins Morning Exercise", completedDates: [] },
+                { id: "h3", title: "1 Hour Bug Hunting / Scope Review", completedDates: [] },
+                { id: "h4", title: "Update Finance Dashboard Ledger", completedDates: [] },
+                { id: "h5", title: "Read technical paper/blog", completedDates: [] }
+              ];
+              this.saveAllLocal();
+            }
+          } else {
+            this.seedMockData();
+            this.saveAllLocal();
+          }
+          this.migrateMenuOrders();
+          return Promise.resolve();
+        }
+      },
+
+      async saveTable(tableName) {
+        if (this.isGasEnv()) {
+          return new Promise((resolve) => {
+            google.script.run.withSuccessHandler(() => {
+              resolve({ success: true });
+            }).saveTableData(tableName, this.cache[tableName]);
+          });
+        } else {
+          this.saveAllLocal();
+          return Promise.resolve({ success: true });
+        }
+      },
+
+      saveAllLocal() {
+        localStorage.setItem('saas_db', JSON.stringify(this.cache));
+      },
+      migrateMenuOrders() {
+        if (this.cache.Menu && this.cache.Menu.length > 0) {
+          let changed = false;
+
+          // Fix invalid icons (like media_link) in active database
+          this.cache.Menu.forEach(item => {
+            if (item.type === 'link') {
+              if (item.target === 'socialpost' && (item.icon === 'media_link' || !item.icon)) {
+                item.icon = 'post_add';
+                changed = true;
+              }
+            }
+          });
+
+          // Check if Habit Tracker is missing
+          const hasHabits = this.cache.Menu.find(m => m.target === 'habittracker');
+          if (!hasHabits) {
+            this.cache.Menu.push({ id: "m_habits", type: "link", label: "Habit Tracker", icon: "track_changes", target: "habittracker", adminOnly: "false", order: 1.015 });
+            changed = true;
+          }
+
+          // Check if new menu restructure is applied
+          const isHotelNo1Dashboard = this.cache.Menu.find(m => m.id === 'm_hn1' && m.target === 'hotelno1');
+          if (!isHotelNo1Dashboard) {
+            this.cache.Menu = [
+              { id: "m1", type: "label", label: "Dashboard", icon: "", target: "", adminOnly: "false", order: 1 },
+              { id: "m4", type: "link", label: "Daily Planner", icon: "checklist", target: "tasks", adminOnly: "false", order: 1.01 },
+              { id: "m_habits", type: "link", label: "Habit Tracker", icon: "track_changes", target: "habittracker", adminOnly: "false", order: 1.015 },
+              { id: "m11", type: "link", label: "Calendar", icon: "calendar_today", target: "calendar", adminOnly: "false", order: 1.02 },
+              { id: "m12", type: "link", label: "Notes Pad", icon: "sticky_note_2", target: "notes", adminOnly: "false", order: 1.03 },
+              { id: "m2", type: "link", label: "Dashboard", icon: "grid_view", target: "dashboard", adminOnly: "false", order: 1.04 },
+              { id: "m3", type: "link", label: "Finance Dashboard", icon: "account_balance_wallet", target: "finance", adminOnly: "true", order: 1.05 },
+              { id: "m14", type: "link", label: "Reports", icon: "description", target: "reports", adminOnly: "true", order: 1.06 },
+              { id: "m13", type: "link", label: "Analytics Panel", icon: "analytics", target: "analytics", adminOnly: "true", order: 1.07 },
+              
+              { id: "m_bb", type: "label", label: "Bug Bounty", icon: "", target: "", adminOnly: "true", order: 2 },
+              { id: "m5", type: "link", label: "Bugcrowd", icon: "bug_report", target: "bugbounty", adminOnly: "true", order: 2.01 },
+              { id: "m_h1", type: "link", label: "HackerOne", icon: "security", target: "hackerone", adminOnly: "true", order: 2.02 },
+              
+              { id: "m_ms", type: "label", label: "MS", icon: "", target: "", adminOnly: "false", order: 3 },
+  { id: "m_apnatt", type: "link", label: "Apna tour travels", icon: "commute", target: "apnatourtravels", adminOnly: "false", order: 3.01 },
+              
+              { id: "m_sys", type: "label", label: "Systting", icon: "", target: "", adminOnly: "false", order: 7 },
+              { id: "m16", type: "link", label: "Profile", icon: "account_circle", target: "profile", adminOnly: "false", order: 7.01 },
+              { id: "m17", type: "link", label: "Settings", icon: "settings", target: "settings", adminOnly: "false", order: 7.02 },
+              { id: "m18", type: "link", label: "Admin Panel", icon: "admin_panel_settings", target: "adminpanel", adminOnly: "true", order: 7.03 }
+            ];
+            changed = true;
+          }
+
+          // Merge 'Tour and Travels', 'Hotel With Resturant', 'Sport Academy', 'Canva' into 'MS'
+          const categoriesToMerge = ['Tour and Travels', 'Hotel With Resturant', 'Sport Academy', 'Canva'];
+          const foundLabels = this.cache.Menu.filter(m => m.type === 'label' && categoriesToMerge.includes(m.label));
+          
+          if (foundLabels.length > 0) {
+            let msLabel = this.cache.Menu.find(m => m.type === 'label' && m.label === 'MS');
+            if (!msLabel) {
+              const minMergedOrder = Math.min(...foundLabels.map(l => Math.floor(Number(l.order || 3))));
+              msLabel = { id: "m_ms", type: "label", label: "MS", icon: "", target: "", adminOnly: "false", order: minMergedOrder };
+              this.cache.Menu.push(msLabel);
+            }
+            
+            const mergedOrders = foundLabels.map(l => Math.floor(Number(l.order)));
+            const msBase = Math.floor(Number(msLabel.order));
+            let msSubCounter = 1;
+            
+            const existingMsLinks = this.cache.Menu.filter(m => m.type === 'link' && Math.floor(Number(m.order)) === msBase && !mergedOrders.includes(Math.floor(Number(m.order))));
+            if (existingMsLinks.length > 0) {
+              const maxSub = Math.max(...existingMsLinks.map(m => Math.round((Number(m.order) - msBase) * 100)));
+              msSubCounter = maxSub + 1;
+            }
+
+            const childLinks = this.cache.Menu.filter(item => item.type === 'link' && mergedOrders.includes(Math.floor(Number(item.order))))
+                                              .sort((a,b) => Number(a.order || 0) - Number(b.order || 0));
+            childLinks.forEach(item => {
+              item.order = msBase + (msSubCounter / 100);
+              msSubCounter++;
+            });
+
+            this.cache.Menu = this.cache.Menu.filter(m => !(m.type === 'label' && categoriesToMerge.includes(m.label)));
+            changed = true;
+          }
+
+          // Remove items requested by user: Hotel No 1, RK Palace, Kurosahi Multie soprt acdemy, and Canva editing links
+          const deleteLabelsOrTargets = [
+            'hotel no 1', 'rk palace', 'video editing', 'post editing', 
+            'banner editing', 'menu editing', 'visiting card editing',
+            'hotelno1', 'videoediting', 'postediting', 'bannerediting', 'menuediting', 'cardediting'
+          ];
+          const beforeLen = this.cache.Menu.length;
+          this.cache.Menu = this.cache.Menu.filter(m => {
+            const lbl = (m.label || '').toLowerCase().trim();
+            const tgt = (m.target || '').toLowerCase().trim();
+            if (deleteLabelsOrTargets.includes(lbl) || deleteLabelsOrTargets.includes(tgt)) return false;
+            if (lbl.includes('kurosahi') || tgt.includes('kurosahi')) return false;
+            if (lbl.includes('rk palace') || tgt.includes('rkpalace')) return false;
+            return true;
+          });
+          if (this.cache.Menu.length !== beforeLen) {
+            changed = true;
+          }
+
+
+          let lastCategoryOrder = 1;
+          let linkCounter = 1;
+          const sorted = [...this.cache.Menu].sort((a,b) => {
+            const diff = Number(a.order || 0) - Number(b.order || 0);
+            if (diff !== 0) return diff;
+            if (a.type === 'label' && b.type === 'link') return -1;
+            if (a.type === 'link' && b.type === 'label') return 1;
+            return 0;
+          });
+          sorted.forEach(item => {
+            if (item.type === 'label') {
+              const val = Math.floor(Number(item.order || 1));
+              if (item.order !== val) {
+                item.order = val;
+                changed = true;
+              }
+              lastCategoryOrder = val;
+              linkCounter = 1;
+            } else if (item.type === 'link') {
+              const expectedParent = Math.floor(Number(item.order || 0));
+              const isInteger = (Number(item.order || 0) % 1 === 0);
+              if (expectedParent !== lastCategoryOrder || isInteger) {
+                const newVal = lastCategoryOrder + (linkCounter / 100);
+                if (item.order !== newVal) {
+                  item.order = newVal;
+                  changed = true;
+                }
+                linkCounter++;
+              } else {
+                const currentLocal = Math.round((Number(item.order) - expectedParent) * 100);
+                if (currentLocal >= linkCounter) {
+                  linkCounter = currentLocal + 1;
+                }
+              }
+            }
+          });
+          if (changed) {
+            this.saveTable('Menu');
+          }
+        }
+      },
+
+      // Helper to generate IDs
+      uid() {
+        return 'id_' + Math.random().toString(36).slice(2, 9);
+      },
+
+      seedMockData() {
+        // 1. Settings
+        this.cache.Settings = [
+          { key: "theme", value: "dark" },
+          { key: "currency", value: "INR" },
+          { key: "admin_password", value: "Mrutunjaya@782" },
+          { key: "admin_username", value: "official.mrutunjaya@gmail.com" },
+          { key: "2fa_enabled", value: "true" }
+        ];
+
+        // 2. Finance
+        this.cache.Finance = [
+          { id: "fin_1", date: "2026-07-01", type: "income", category: "Bug Bounty", amount: 120000, description: "Google VRP Reward", paymentMode: "Bank Transfer" },
+          { id: "fin_2", date: "2026-07-03", type: "income", category: "YouTube", amount: 25000, description: "Monthly AdSense payout", paymentMode: "Google Pay" },
+          { id: "fin_3", date: "2026-07-04", type: "expense", category: "Investments", amount: 15000, description: "SIP Equity Fund", paymentMode: "Net Banking" },
+          { id: "fin_4", date: "2026-07-05", type: "expense", category: "Credit Cards", amount: 18000, description: "HDFC Credit Card Bill", paymentMode: "Autopay" },
+          { id: "fin_5", date: "2026-07-06", type: "income", category: "Freelancing", amount: 45000, description: "Python Web Scraping Project", paymentMode: "UPI" }
+        ];
+
+        // 3. Tasks
+        this.cache.Tasks = [
+          { id: "task_1", title: "Review scope details for Google Bug Bounty target", date: "2026-07-07", timeSlot: "morning", status: "completed", priority: "high", habits: {} },
+          { id: "task_2", title: "Record new YouTube Python Automation Video", date: "2026-07-07", timeSlot: "afternoon", status: "pending", priority: "medium", habits: {} },
+          { id: "task_3", title: "Review Mahasuara Room Booking Ledger", date: "2026-07-07", timeSlot: "evening", status: "pending", priority: "high", habits: {} },
+          { id: "task_4", title: "Reconcile credit card payments in Finance", date: "2026-07-07", timeSlot: "night", status: "pending", priority: "low", habits: {} }
+        ];
+
+        // 4. Bug Bounty
+        this.cache.BugBounty = [
+          { id: "bb_1", program: "Google", target: "admin.google.com", scope: "Subdomain takeover risk", status: "Resolved", severity: "High", reward: 3500, submittedDate: "2026-06-15", paidStatus: "Paid" },
+          { id: "bb_2", program: "Microsoft", target: "login.live.com", scope: "MFA bypass vulnerability", status: "Triaged", severity: "Critical", reward: 8000, submittedDate: "2026-06-28", paidStatus: "Unpaid" },
+          { id: "bb_3", program: "Meta", target: "Instagram API", scope: "Broken Object Level Authorization", status: "Under Review", severity: "Medium", reward: 1500, submittedDate: "2026-07-02", paidStatus: "Unpaid" }
+        ];
+
+        // 5. Hotel Bookings (Mahasuara King's Tower)
+        this.cache.HotelBookings = [
+          { id: "hb_1", roomNumber: "101", guestName: "Rahul Sharma", guestPhone: "9876543210", checkIn: "2026-07-05", checkOut: "2026-07-08", status: "occupied", totalAmount: 9000, paymentStatus: "paid" },
+          { id: "hb_2", roomNumber: "102", guestName: "Sarah Jenkins", guestPhone: "9123456780", checkIn: "2026-07-07", checkOut: "2026-07-10", status: "occupied", totalAmount: 12000, paymentStatus: "pending" },
+          { id: "hb_3", roomNumber: "201", guestName: "Preeti Singh", guestPhone: "9811223344", checkIn: "2026-07-08", checkOut: "2026-07-09", status: "available", totalAmount: 4500, paymentStatus: "pending" }
+        ];
+
+        // 6. Restaurant Orders
+        this.cache.RestaurantOrders = [
+          { id: "ro_1", date: "2026-07-07", orderDetails: "2x Butter Chicken, 4x Butter Naan, 1x Coke", totalAmount: 950, status: "Delivered" },
+          { id: "ro_2", date: "2026-07-07", orderDetails: "1x Paneer Tikka, 1x Veg Biryani", totalAmount: 620, status: "Preparing" },
+          { id: "ro_3", date: "2026-07-07", orderDetails: "1x Chicken Biryani, 2x Cold Drinks", totalAmount: 510, status: "Delivered" }
+        ];
+
+        // 7. Restaurant Inventory
+        this.cache.RestaurantInventory = [
+          { id: "ri_1", item: "Rice Basmati", category: "Grains", stock: 120, unit: "kg", minStock: 30, price: 90 },
+          { id: "ri_2", item: "Chicken Raw", category: "Meat", stock: 15, unit: "kg", minStock: 10, price: 240 },
+          { id: "ri_3", item: "Butter Amul", category: "Dairy", stock: 4, unit: "kg", minStock: 5, price: 480 },
+          { id: "ri_4", item: "Cooking Oil", category: "Groceries", stock: 50, unit: "ltr", minStock: 15, price: 125 }
+        ];
+
+        // 8. Tour Bookings
+        this.cache.TourBookings = [
+          { id: "tb_1", customerName: "Rajesh Kapoor", taxiDetails: "Toyota Innova (OD-02-B-4321)", driverName: "Dilip Kumar", tourPackage: "Puri to Chilika Lake Day Tour", paymentStatus: "Paid", totalAmount: 4000, date: "2026-07-06" },
+          { id: "tb_2", customerName: "Anita Roy", taxiDetails: "Maruti Dzire (OD-02-C-9876)", driverName: "Manas Rout", tourPackage: "Konark Sun Temple Transit", paymentStatus: "Pending", totalAmount: 2200, date: "2026-07-08" }
+        ];
+
+        // 9. Notes
+        this.cache.Notes = [
+          { id: "note_1", title: "Bug Bounty Target Scoping Guidelines", content: "Check headers for auth bypass. Focus on backend endpoints. Avoid automated scanners.", category: "Work", tags: "bugbounty,google", updatedAt: "2026-07-05T14:30:00.000Z" },
+          { id: "note_2", title: "Ideas for Python scripts", content: "1. Web scraper for YouTube statistics tracker.\n2. Slack webhook utility for bounty report updates.", category: "Development", tags: "python,coding", updatedAt: "2026-07-06T18:10:00.000Z" }
+        ];
+
+        // 10. Employees
+        this.cache.Employees = [];
+
+        // 11. Sidebar Navigation Menu
+        this.cache.Menu = [
+          { id: "m1", type: "label", label: "Dashboard", icon: "", target: "", adminOnly: "false", order: 1 },
+          { id: "m4", type: "link", label: "Daily Planner", icon: "checklist", target: "tasks", adminOnly: "false", order: 1.01 },
+          { id: "m11", type: "link", label: "Calendar", icon: "calendar_today", target: "calendar", adminOnly: "false", order: 1.02 },
+          { id: "m12", type: "link", label: "Notes Pad", icon: "sticky_note_2", target: "notes", adminOnly: "false", order: 1.03 },
+          { id: "m2", type: "link", label: "Dashboard", icon: "grid_view", target: "dashboard", adminOnly: "false", order: 1.04 },
+          { id: "m3", type: "link", label: "Finance Dashboard", icon: "account_balance_wallet", target: "finance", adminOnly: "true", order: 1.05 },
+          { id: "m14", type: "link", label: "Reports", icon: "description", target: "reports", adminOnly: "true", order: 1.06 },
+          { id: "m13", type: "link", label: "Analytics Panel", icon: "analytics", target: "analytics", adminOnly: "true", order: 1.07 },
+          
+          { id: "m_bb", type: "label", label: "Bug Bounty", icon: "", target: "", adminOnly: "true", order: 2 },
+          { id: "m5", type: "link", label: "Bugcrowd", icon: "bug_report", target: "bugbounty", adminOnly: "true", order: 2.01 },
+          { id: "m_h1", type: "link", label: "HackerOne", icon: "security", target: "hackerone", adminOnly: "true", order: 2.02 },
+          
+          { id: "m_ms", type: "label", label: "MS", icon: "", target: "", adminOnly: "false", order: 3 },
+  { id: "m_apnatt", type: "link", label: "Apna tour travels", icon: "commute", target: "apnatourtravels", adminOnly: "false", order: 3.01 },
+          
+          { id: "m_sys", type: "label", label: "Systting", icon: "", target: "", adminOnly: "false", order: 7 },
+          { id: "m16", type: "link", label: "Profile", icon: "account_circle", target: "profile", adminOnly: "false", order: 7.01 },
+          { id: "m17", type: "link", label: "Settings", icon: "settings", target: "settings", adminOnly: "false", order: 7.02 },
+          { id: "m18", type: "link", label: "Admin Panel", icon: "admin_panel_settings", target: "adminpanel", adminOnly: "true", order: 7.03 }
+        ];
+
+        this.cache.UserProfile = {
+          firstName: "Mrutunjaya",
+          lastName: "Mahasuara",
+          phone: "9876543210",
+          email: "mrutunjaya@example.com",
+          address: "Bhubaneswar, Odisha",
+          website: "https://mrutunjaya.dev",
+          socials: {
+            facebook: "https://facebook.com/mrutunjaya",
+            twitter: "https://twitter.com/mrutunjaya",
+            linkedin: "https://linkedin.com/in/mrutunjaya",
+            instagram: "https://instagram.com/mrutunjaya"
+          },
+          notes: "Cybersecurity engineer, bug hunter, and software developer. Currently managing Mahasuara Tower operations.",
+          activityLog: [
+            { timestamp: new Date().toISOString(), action: "Profile Initialized", details: "Profile defaults seeded successfully" }
+          ]
+        };
+
+        // 13. Habits
+        this.cache.Habits = [
+          { id: "h1", title: "Wake up by 6:00 AM", completedDates: [] },
+          { id: "h2", title: "30 mins Morning Exercise", completedDates: [] },
+          { id: "h3", title: "1 Hour Bug Hunting / Scope Review", completedDates: [] },
+          { id: "h4", title: "Update Finance Dashboard Ledger", completedDates: [] },
+          { id: "h5", title: "Read technical paper/blog", completedDates: [] }
+        ];
+      }
+    };
+
+    // Database will be initialized in bootstrap block below
+
+    /* ==========================================================================
+       APP ROUTER & CONTROLLER
+       ========================================================================== */
+    const Router = {
+      routes: {},
+      currentView: 'dashboard',
+
+      init() {
+        window.addEventListener('hashchange', () => this.handleRouting());
+        this.handleRouting();
+      },
+
+      register(viewName, renderFn) {
+        this.routes[viewName] = renderFn;
+      },
+
+      handleRouting() {
+        let rawHash = window.location.hash.slice(1) || 'dashboard';
+        const hash = decodeURIComponent(rawHash).replace(/\s+/g, '').toLowerCase();
+        
+        // Auth Check
+        const isAuth = localStorage.getItem('saas_logged_in') === 'true';
+        if (!isAuth && hash !== 'login') {
+          window.location.hash = '#login';
+          return;
+        }
+
+        const userRole = localStorage.getItem('saas_user_role') || 'admin';
+        // Compute adminOnly views dynamically from DB
+        const adminViews = DB.cache.Menu.filter(m => m.adminOnly === 'true' && m.type === 'link').map(m => m.target.replace(/\s+/g, '').toLowerCase());
+        if (isAuth && userRole === 'employee' && adminViews.includes(hash)) {
+          window.location.hash = '#dashboard';
+          setTimeout(() => showNotification('Access Denied: Admin role required.'), 200);
+          return;
+        }
+
+        this.currentView = hash;
+        this.renderShell();
+        
+        let routeKey = hash;
+        if (hash.startsWith('hotel_') && !this.routes[hash]) routeKey = 'hoteldashboard';
+        if (hash.startsWith('sport_') && !this.routes[hash]) routeKey = 'sportacademydashboard';
+        if ((hash.startsWith('tour_') || hash === 'apnatourtravels') && !this.routes[hash]) routeKey = 'tourdashboard';
+        if (hash.startsWith('bb_') && !this.routes[hash]) routeKey = 'bugbountydashboard';
+        if (hash.startsWith('custom_')) routeKey = 'custompage';
+        
+        if (this.routes[routeKey]) {
+          this.routes[routeKey](hash); // Pass original hash for dynamic lookup
+          // Bind active menu class
+          document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+            const itemTarget = item.getAttribute('href').slice(1).replace(/\s+/g, '').toLowerCase();
+            item.classList.toggle('active', itemTarget === hash);
+          });
+        }
+      },
+
+      renderShell() {
+        const root = document.getElementById('app-root');
+        
+        if (this.currentView === 'login') {
+          root.innerHTML = `<div id="login-viewport"></div>`;
+          return;
+        }
+
+        const userRole = localStorage.getItem('saas_user_role') || 'admin';
+        const userName = localStorage.getItem('saas_user_name') || 'Admin User';
+        const userAvatar = userName.charAt(0).toUpperCase();
+        const displayRole = userRole === 'admin' ? 'Super Administrator' : 'Staff Employee';
+
+        // Sort menu by order
+        const menuList = [...DB.cache.Menu].sort((a, b) => Number(a.order || 0) - Number(b.order || 0));
+        const sidebarNavHtml = window.buildSidebarHtml(userRole, menuList, window.location.hash);
+
+        // Layout with Sidebar & Topbar
+        if (!document.getElementById('app-wrapper-element')) {
+          root.innerHTML = `
+            <div class="app-wrapper" id="app-wrapper-element">
+              <!-- Sidebar -->
+              <aside class="sidebar" id="app-sidebar">
+                <div class="sidebar-brand">
+                  <i class="material-icons-round">dashboard_customize</i>
+                  <span>${DB.cache.UserProfile?.firstName || "Mrutunjaya"}</span>
+                </div>
+                <nav class="sidebar-nav">
+                  ${sidebarNavHtml}
+                </nav>
+                <div class="sidebar-footer">
+                  <div class="sidebar-avatar">${userAvatar}</div>
+                  <div class="sidebar-user-details">
+                    <span class="sidebar-user-name">${userName}</span>
+                    <span class="sidebar-user-role">${displayRole}</span>
+                  </div>
+                  <a href="#" onclick="doLogout(event)" style="color:var(--text-muted);"><i class="material-icons-round">logout</i></a>
+                </div>
+              </aside>
+
+              <!-- Main Content Panel -->
+              <div class="main-panel">
+                <header class="topbar">
+                  <div class="topbar-left">
+                    <button class="toggle-sidebar-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h2 class="page-title" id="page-display-title">Dashboard</h2>
+                  </div>
+                  <div class="topbar-right">
+                    <div style="margin-right: 15px; display: flex; align-items: center; background: var(--bg-tertiary); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--border-light);">
+                      <label for="global-nav-date" style="margin-right: 8px; margin-bottom: 0; color: var(--primary); cursor: pointer;"><i class="fas fa-calendar-alt"></i></label>
+                      <input type="date" id="global-nav-date" style="border: none; background: transparent; color: var(--text-dark); font-weight: 600; outline: none; cursor: pointer;" value="${window.globalSelectedDate}" onchange="window.updateGlobalDate(this.value)">
+                    </div>
+                    <div class="search-box">
+                      <i class="fas fa-search"></i>
+                      <input type="text" placeholder="Global Search..." id="global-search-input" onkeyup="handleGlobalSearch(event)">
+                    </div>
+                    <div id="user-coin-balance" style="display:flex; align-items:center; gap:6px; background:var(--bg-tertiary); padding:6px 12px; border-radius:20px; font-weight:700; color:var(--gold); border:1px solid var(--border-light); font-size:0.95rem; cursor:pointer;" title="Your Coins earned from tasks">
+                      <i class="fas fa-coins"></i> <span id="coin-count-display">${localStorage.getItem('saas_user_coins') || 0}</span>
+                    </div>
+                    <button class="topbar-action-btn" onclick="toggleThemeGlobal()" title="Toggle Theme">
+                      <i class="material-icons-round" id="nav-theme-toggle-icon">light_mode</i>
+                    </button>
+                    <button class="topbar-action-btn" onclick="toggleNotificationTray(event)">
+                      <i class="material-icons-round">notifications</i>
+                      <span class="badge"></span>
+                    </button>
+                    <div class="user-profile-menu" onclick="window.location.hash='#profile'">
+                      <div class="sidebar-avatar" style="width:32px;height:32px;font-size:0.8rem;">${userAvatar}</div>
+                    </div>
+                  </div>
+                </header>
+                <main class="content-area" id="main-content-view"></main>
+              </div>
+            </div>
+          `;
+          applyTheme();
+        }
+        
+        // Update Title on Header
+        const menuMatch = DB.cache.Menu.find(m => m.type === 'link' && m.target && m.target.replace(/\s+/g, '').toLowerCase() === this.currentView);
+        const cleanTitle = menuMatch ? menuMatch.label : (this.currentView.charAt(0).toUpperCase() + this.currentView.slice(1).replace('travels', ' & Travels'));
+        const displayTitle = document.getElementById('page-display-title');
+        if (displayTitle) displayTitle.innerText = cleanTitle;
+      }
+    };
+
+    /* ==========================================================================
+       6. GLOBAL UI & LAYOUT UTILITIES
+       ========================================================================== */
+    window.toggleCardMenu = function(e, element) {
+      e.stopPropagation();
+      // Close all other dropdowns first
+      document.querySelectorAll('.card-menu-dropdown').forEach(d => {
+        if (d !== element.querySelector('.card-menu-dropdown')) {
+          d.style.display = 'none';
+        }
+      });
+      const dropdown = element.querySelector('.card-menu-dropdown');
+      if (dropdown) {
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+      }
+    };
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.card-menu-dropdown').forEach(d => d.style.display = 'none');
+    });
+
+    window.editCard = function(title) {
+      alert("Edit options for '" + title + "' will be implemented soon!");
+      document.querySelectorAll('.card-menu-dropdown').forEach(d => d.style.display = 'none');
+    };
+
+    window.openDeleteModal = function(itemName, onConfirm) {
+      const existing = document.getElementById('custom-delete-modal');
+      if (existing) existing.remove();
+
+      const modalHTML = `
+        <div id="custom-delete-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s;">
+          <div class="card fade-in-up" style="background:var(--bg-secondary); padding:30px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 30px rgba(0,0,0,0.5); text-align:center;">
+            <i class="material-icons-round" style="font-size:4rem; color:var(--danger); margin-bottom:15px;">warning</i>
+            <h2 style="font-size:1.4rem; color:var(--text-primary); margin-bottom:15px;">Confirm Deletion</h2>
+            <p style="color:var(--text-secondary); margin-bottom:20px; line-height:1.5;">
+              Are you sure you want to delete <strong>${itemName}</strong>? This action cannot be undone.
+            </p>
+            <div style="text-align:left; background:var(--bg-tertiary); padding:12px; border-radius:8px; margin-bottom:25px; border:1px solid var(--border-light);">
+              <label style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;">
+                <input type="checkbox" id="delete-agree-checkbox" style="margin-top:3px; transform:scale(1.2); cursor:pointer;" onchange="document.getElementById('confirm-delete-btn').disabled = !this.checked; if(this.checked){document.getElementById('confirm-delete-btn').style.opacity=1; document.getElementById('confirm-delete-btn').style.cursor='pointer';}else{document.getElementById('confirm-delete-btn').style.opacity=0.5; document.getElementById('confirm-delete-btn').style.cursor='not-allowed';}">
+                <span style="font-size:0.9rem; color:var(--text-muted);">I agree to permanently delete this item.</span>
+              </label>
+            </div>
+            <div style="display:flex; gap:15px;">
+              <button class="btn" style="flex:1; background:var(--bg-tertiary); color:var(--text-primary); padding:10px;" onclick="document.getElementById('custom-delete-modal').style.opacity=0; setTimeout(()=>document.getElementById('custom-delete-modal').remove(), 300)">Cancel</button>
+              <button id="confirm-delete-btn" class="btn" disabled style="flex:1; background:var(--danger); color:white; padding:10px; opacity:0.5; cursor:not-allowed; transition:all 0.2s;" onclick="document.getElementById('custom-delete-modal').remove(); window.executeDeleteCallback()">Delete</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const modalContainer = document.createElement('div');
+      modalContainer.innerHTML = modalHTML;
+      document.body.appendChild(modalContainer.firstElementChild);
+      
+      setTimeout(() => {
+        const modal = document.getElementById('custom-delete-modal');
+        if(modal) modal.style.opacity = '1';
+      }, 10);
+      
+      window.executeDeleteCallback = onConfirm;
+    };
+
+    window.editCard = function(title, dashboardHash, target = '', currentIcon = 'web') {
+      const modalHTML = `
+        <div id="custom-edit-modal" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); display:flex; justify-content:center; align-items:center; z-index:9999; opacity:0; transition:opacity 0.3s ease;">
+          <div style="background:var(--bg-secondary); border:1px solid var(--border-light); border-radius:12px; padding:30px; width:100%; max-width:500px; box-shadow:0 10px 40px rgba(0,0,0,0.5); transform:translateY(20px); transition:transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); animation:slideUpFadeIn 0.4s forwards;">
+            <h3 style="font-size:1.4rem; font-weight:600; margin-bottom:15px; color:var(--text-primary); display:flex; align-items:center; gap:10px;">
+              <i class="material-icons-round" style="color:var(--gold); font-size:1.8rem;">edit</i> Edit Card
+            </h3>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label style="font-weight:600; margin-bottom:8px; display:block;">Card Title</label>
+              <input type="text" id="edit-card-title" class="form-control" value="${title}" style="padding:12px; font-size:1rem;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 30px;">
+              <label style="font-weight:600; margin-bottom:8px; display:block;">Select an Icon</label>
+              <div id="edit-icon-picker-grid" style="display:flex; flex-wrap:wrap; gap:10px; max-height: 150px; overflow-y:auto; padding:10px; background:var(--bg-primary); border:1px solid var(--border-light); border-radius:8px;">
+                ${(window.MATERIAL_ICONS || ['web']).map(icon => `
+                  <div class="edit-icon-option ${icon === currentIcon ? 'selected' : ''}" onclick="window.selectEditIcon(this, '${icon}')" style="cursor:pointer; padding:8px; border-radius:6px; display:flex; justify-content:center; align-items:center; border: 2px solid ${icon === currentIcon ? 'var(--gold)' : 'transparent'}; background: ${icon === currentIcon ? 'rgba(212,175,55,0.1)' : 'transparent'}; transition:all 0.2s;" title="${icon}">
+                    <i class="material-icons-round" style="font-size:1.5rem; color:${icon === currentIcon ? 'var(--gold)' : 'var(--text-secondary)'};">${icon}</i>
+                  </div>
+                `).join('')}
+              </div>
+              <input type="hidden" id="edit-card-icon" value="${currentIcon}">
+            </div>
+            
+            <div style="display:flex; gap:15px;">
+              <button class="btn" style="flex:1; background:var(--bg-tertiary); color:var(--text-primary); padding:10px;" onclick="document.getElementById('custom-edit-modal').style.opacity=0; setTimeout(()=>document.getElementById('custom-edit-modal').remove(), 300)">Cancel</button>
+              <button class="btn btn-primary" style="flex:1; padding:10px;" onclick="window.executeEditCard('${title}', '${dashboardHash}', '${target}'); document.getElementById('custom-edit-modal').remove();">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const modalContainer = document.createElement('div');
+      modalContainer.innerHTML = modalHTML;
+      document.body.appendChild(modalContainer.firstElementChild);
+      
+      setTimeout(() => {
+        const modal = document.getElementById('custom-edit-modal');
+        if(modal) modal.style.opacity = '1';
+      }, 10);
+    };
+
+    window.selectEditIcon = function(el, iconName) {
+      document.querySelectorAll('.edit-icon-option').forEach(opt => {
+        opt.style.border = '2px solid transparent';
+        opt.style.background = 'transparent';
+        opt.classList.remove('selected');
+        opt.querySelector('i').style.color = 'var(--text-secondary)';
+      });
+      el.style.border = '2px solid var(--gold)';
+      el.style.background = 'rgba(212,175,55,0.1)';
+      el.classList.add('selected');
+      el.querySelector('i').style.color = 'var(--gold)';
+      document.getElementById('edit-card-icon').value = iconName;
+    };
+
+    window.executeEditCard = function(oldTitle, dashboardHash, target) {
+      const newTitle = document.getElementById('edit-card-title').value.trim();
+      const newIcon = document.getElementById('edit-card-icon').value.trim();
+      if (!newTitle) return;
+
+      if (target.startsWith('custom_')) {
+        const hotelKey = 'saas_hotel_custom_pages_' + dashboardHash;
+        if (localStorage.getItem(hotelKey)) {
+          let pages = JSON.parse(localStorage.getItem(hotelKey));
+          let page = pages.find(p => p.title === oldTitle);
+          if (page) { page.title = newTitle; page.icon = newIcon; }
+          localStorage.setItem(hotelKey, JSON.stringify(pages));
+        }
+        const tourKey = 'saas_tour_custom_pages_' + dashboardHash;
+        if (localStorage.getItem(tourKey)) {
+          let pages = JSON.parse(localStorage.getItem(tourKey));
+          let page = pages.find(p => p.title === oldTitle);
+          if (page) { page.title = newTitle; page.icon = newIcon; }
+          localStorage.setItem(tourKey, JSON.stringify(pages));
+        }
+        const sportKey = 'saas_sport_custom_pages_' + dashboardHash;
+        if (localStorage.getItem(sportKey)) {
+          let pages = JSON.parse(localStorage.getItem(sportKey));
+          let page = pages.find(p => p.title === oldTitle);
+          if (page) { page.title = newTitle; page.icon = newIcon; }
+          localStorage.setItem(sportKey, JSON.stringify(pages));
+        }
+      } else {
+        let edited = {};
+        try {
+          const raw = localStorage.getItem('saas_edited_cards_' + dashboardHash);
+          if (raw) edited = JSON.parse(raw);
+        } catch(e){}
+        edited[oldTitle] = { title: newTitle, icon: newIcon };
+        localStorage.setItem('saas_edited_cards_' + dashboardHash, JSON.stringify(edited));
+      }
+
+      if (window.showNotification) window.showNotification("Card updated successfully.");
+      Router.handleRouting();
+    };
+
+    window.deleteCard = function(title, dashboardHash, target = '') {
+      window.openDeleteModal(title, () => {
+        // 1. Hide default cards (only if it's not a custom card)
+        if (!target.startsWith('custom_')) {
+          let deleted = [];
+          try {
+            const raw = localStorage.getItem('saas_deleted_cards_' + dashboardHash);
+            if (raw) deleted = JSON.parse(raw);
+          } catch(e){}
+          if (!deleted.includes(title)) {
+            deleted.push(title);
+            localStorage.setItem('saas_deleted_cards_' + dashboardHash, JSON.stringify(deleted));
+          }
+        }
+
+        // 2. Remove custom cards
+        try {
+          const hotelKey = 'saas_hotel_custom_pages_' + dashboardHash;
+          if (localStorage.getItem(hotelKey)) {
+            let pages = JSON.parse(localStorage.getItem(hotelKey));
+            localStorage.setItem(hotelKey, JSON.stringify(pages.filter(p => p.title !== title)));
+          }
+          const tourKey = 'saas_tour_custom_pages_' + dashboardHash;
+          if (localStorage.getItem(tourKey)) {
+            let pages = JSON.parse(localStorage.getItem(tourKey));
+            pages = pages.filter(p => p.title !== title);
+            localStorage.setItem(tourKey, JSON.stringify(pages));
+          }
+          const sportKey = 'saas_sport_custom_pages_' + dashboardHash;
+          if (localStorage.getItem(sportKey)) {
+            let pages = JSON.parse(localStorage.getItem(sportKey));
+            pages = pages.filter(p => p.title !== title);
+            localStorage.setItem(sportKey, JSON.stringify(pages));
+          }
+        } catch(e){}
+
+        if (window.showNotification) window.showNotification("'" + title + "' deleted successfully.");
+        document.querySelectorAll('.card-menu-dropdown').forEach(d => d.style.display = 'none');
+        Router.handleRouting(); // Refresh view
+      });
+    };
+
+    window.openRenameModal = function(currentName, onConfirm) {
+      const existing = document.getElementById('custom-rename-modal');
+      if (existing) existing.remove();
+
+      const modalHTML = `
+        <div id="custom-rename-modal" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.8); z-index:9999; display:flex; justify-content:center; align-items:center; opacity:0; transition:opacity 0.3s;">
+          <div class="card fade-in-up" style="background:var(--bg-secondary); padding:30px; border-radius:12px; width:90%; max-width:400px; box-shadow:0 10px 30px rgba(0,0,0,0.5); text-align:center;">
+            <i class="material-icons-round" style="font-size:3.5rem; color:var(--gold); margin-bottom:15px;">edit_note</i>
+            <h2 style="font-size:1.4rem; color:var(--text-primary); margin-bottom:10px;">Rename Item</h2>
+            <p style="color:var(--text-secondary); margin-bottom:20px; font-size:0.9rem;">
+              Enter a new name for <strong>${currentName}</strong>:
+            </p>
+            <div style="margin-bottom:25px;">
+              <input type="text" id="rename-input-field" value="${currentName}" style="width:100%; padding:12px 15px; border-radius:8px; border:1px solid var(--border-light); background:var(--bg-tertiary); color:var(--text-primary); font-size:1rem; outline:none; text-align:center;" onkeydown="if(event.key === 'Enter') document.getElementById('confirm-rename-btn').click();">
+            </div>
+            <div style="display:flex; gap:15px;">
+              <button class="btn" style="flex:1; background:var(--bg-tertiary); color:var(--text-primary); padding:10px;" onclick="document.getElementById('custom-rename-modal').style.opacity=0; setTimeout(()=>document.getElementById('custom-rename-modal').remove(), 300)">Cancel</button>
+              <button id="confirm-rename-btn" class="btn" style="flex:1; background:var(--gold); color:var(--bg-primary); padding:10px; font-weight:600;" onclick="const val = document.getElementById('rename-input-field').value; document.getElementById('custom-rename-modal').remove(); window.executeRenameCallback(val)">Save</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      const modalContainer = document.createElement('div');
+      modalContainer.innerHTML = modalHTML;
+      document.body.appendChild(modalContainer.firstElementChild);
+      
+      const inputEl = document.getElementById('rename-input-field');
+      
+      setTimeout(() => {
+        const modal = document.getElementById('custom-rename-modal');
+        if(modal) {
+          modal.style.opacity = '1';
+          inputEl.focus();
+          inputEl.select();
+        }
+      }, 10);
+      
+      window.executeRenameCallback = onConfirm;
+    };
+
+    window.renameSidebarItem = function(id, currentName) {
+      window.openRenameModal(currentName, (newName) => {
+        if (newName && newName.trim() !== "" && newName !== currentName) {
+          const item = DB.cache.Menu.find(m => m.id === id);
+          if (item) {
+            item.label = newName.trim();
+            DB.saveTable('Menu').then(() => {
+              if (window.showNotification) window.showNotification("Renamed successfully.");
+              if (window.rebuildSidebar) window.rebuildSidebar();
+            });
+          }
+        }
+      });
+    };
+
+    window.deleteSidebarItem = function(id, name) {
+      window.openDeleteModal(name, () => {
+        DB.cache.Menu = DB.cache.Menu.filter(m => m.id !== id);
+        DB.saveTable('Menu').then(() => {
+          if (window.showNotification) window.showNotification("Deleted successfully.");
+          if (window.rebuildSidebar) window.rebuildSidebar();
+        });
+      });
+    };
+
+    function toggleSidebar() {
+      const sb = document.getElementById('app-sidebar');
+      if (sb) sb.classList.toggle('collapsed');
+    }
+
+    window.updateCoins = function(amount) {
+      let coins = parseInt(localStorage.getItem('saas_user_coins') || '0', 10);
+      coins += amount;
+      if (coins < 0) coins = 0;
+      localStorage.setItem('saas_user_coins', coins);
+      const display = document.getElementById('coin-count-display');
+      if (display) {
+        display.innerText = coins;
+        display.style.transform = 'scale(1.3)';
+        display.style.color = '#fff';
+        setTimeout(() => {
+          display.style.transform = 'scale(1)';
+          display.style.color = '';
+        }, 300);
+      }
+    };
+
+    function toggleNotificationTray(e) {
+      e.stopPropagation();
+      const tray = document.getElementById('global-notifications');
+      if (tray) {
+        tray.style.display = tray.style.display === 'block' ? 'none' : 'block';
+      }
+    }
+
+    document.addEventListener('click', () => {
+      const tray = document.getElementById('global-notifications');
+      if (tray) tray.style.display = 'none';
+    });
+
+    function showNotification(msg) {
+      const body = document.getElementById('notification-body-content');
+      const badge = document.querySelector('.topbar-action-btn .badge');
+      if (badge) badge.style.display = 'block';
+
+      if (body) {
+        const item = document.createElement('div');
+        item.className = 'notification-item';
+        item.innerText = `${new Date().toLocaleTimeString()} - ${msg}`;
+        // Remove empty placeholder
+        if (body.innerText.includes('No notifications')) {
+          body.innerHTML = '';
+        }
+        body.insertBefore(item, body.firstChild);
+      }
+    }
+
+    function clearNotifications() {
+      const body = document.getElementById('notification-body-content');
+      const badge = document.querySelector('.topbar-action-btn .badge');
+      if (badge) badge.style.display = 'none';
+      if (body) {
+        body.innerHTML = `<div class="notification-item" style="color:var(--text-muted);text-align:center;padding:20px;">No notifications.</div>`;
+      }
+    }
+
+    function applyTheme() {
+      const themeVal = DB.cache.Settings.find(s => s.key === "theme")?.value || 'dark';
+      document.documentElement.setAttribute('data-theme', themeVal);
+      setTimeout(() => {
+        const iconEl = document.getElementById('nav-theme-toggle-icon');
+        if (iconEl) {
+          iconEl.innerText = themeVal === 'light' ? 'dark_mode' : 'light_mode';
+        }
+      }, 50);
+    }
+
+    function doLogout(e) {
+      e.preventDefault();
+      localStorage.setItem('saas_logged_in', 'false');
+      localStorage.removeItem('saas_user_role');
+      localStorage.removeItem('saas_user_name');
+      localStorage.removeItem('saas_user_username');
+      window.location.hash = '#login';
+      window.location.reload();
+    }
+
+    function showModal(title, contentHtml, submitLabel, submitFn) {
+      document.getElementById('modal-title').innerText = title;
+      document.getElementById('modal-body').innerHTML = contentHtml;
+      const subBtn = document.getElementById('modal-submit-btn');
+      subBtn.innerText = submitLabel;
+      subBtn.onclick = () => {
+        submitFn();
+        hideModal();
+      };
+      document.getElementById('app-modal').style.display = 'flex';
+    }
+
+    function hideModal() {
+      document.getElementById('app-modal').style.display = 'none';
+      const modalContent = document.querySelector('.modal-content');
+      if (modalContent) modalContent.style.maxWidth = '';
+    }
+
+    function closeModal(e) {
+      if (e.target.id === 'app-modal') hideModal();
+    }
+
+    window.customPromptLink = function(callback) {
+      const sel = window.getSelection();
+      const savedRanges = [];
+      for (let i = 0; i < sel.rangeCount; i++) {
+        savedRanges.push(sel.getRangeAt(i).cloneRange());
+      }
+
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.width = '100%'; overlay.style.height = '100%';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
+      overlay.style.zIndex = '10000';
+      overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center';
+      overlay.style.backdropFilter = 'blur(4px)';
+
+      const box = document.createElement('div');
+      box.style.background = 'var(--bg-secondary)';
+      box.style.border = '1px solid var(--border)';
+      box.style.padding = '24px';
+      box.style.borderRadius = '12px';
+      box.style.width = '350px';
+      box.style.boxShadow = 'var(--shadow)';
+      box.style.animation = 'scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      
+      box.innerHTML = `
+        <h4 style="margin:0 0 16px 0; display:flex; align-items:center; gap:8px;"><i class="fas fa-link" style="color:var(--gold);"></i> Insert Link</h4>
+        <input type="text" id="custom-link-input" class="form-control" placeholder="https://example.com" style="margin-bottom:16px;">
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button class="btn btn-secondary" id="custom-link-cancel">Cancel</button>
+          <button class="btn btn-primary" id="custom-link-ok">Insert</button>
+        </div>
+      `;
+      overlay.appendChild(box);
+      document.body.appendChild(overlay);
+
+      setTimeout(() => document.getElementById('custom-link-input').focus(), 100);
+
+      const close = (val) => {
+        document.body.removeChild(overlay);
+        if(val) {
+          const sel2 = window.getSelection();
+          sel2.removeAllRanges();
+          savedRanges.forEach(r => sel2.addRange(r));
+          callback(val);
+        }
+      };
+
+      document.getElementById('custom-link-cancel').onclick = () => close(null);
+      document.getElementById('custom-link-ok').onclick = () => close(document.getElementById('custom-link-input').value);
+      document.getElementById('custom-link-input').onkeydown = (e) => {
+        if(e.key === 'Enter') close(e.target.value);
+        if(e.key === 'Escape') close(null);
+      };
+    };
+
+    function formatCurrency(amount) {
+      const currency = DB.cache.Settings.find(s => s.key === 'currency')?.value || 'INR';
+      const symbol = currency === 'INR' ? '₹' : '$';
+      return `${symbol} ${Number(amount).toLocaleString()}`;
+    }
+
+    /* ==========================================================================
+       7. VIEW RENDERS: IMPLEMENTING THE 15 DYNAMIC PAGES
+       ========================================================================== */
+
+  </script>
+  <script src="views/login.js"></script>
+  <script src="globalIcons.js"></script>
+  <script src="views/dashboard.js"></script>
+  <script src="views/finance.js"></script>
+  <script src="views/tasks.js"></script>
+  <script src="views/habittracker.js"></script>
+  <script src="views/createbugbounty.js"></script>
+  <script src="views/bugbountydashboard.js"></script>
+  <script src="views/createsportacademy.js"></script>
+  <script src="views/sportacademydashboard.js"></script>
+  <script src="views/createsportacademypage.js"></script>
+  <script src="views/bugbounty.js"></script>
+  <script src="views/hackerone.js"></script>
+  <script src="views/hackerone.js"></script>
+  <script src="views/hotel.js"></script>
+  <script src="views/hotelno1.js"></script>
+  <script src="views/createhotel.js"></script>
+  <script src="views/createhotel.js"></script>
+  <script src="views/hoteldashboard.js"></script>
+  <script src="views/createhotelpage.js"></script>
+  <script src="views/createtour.js"></script>
+  <script src="views/tourdashboard.js"></script>
+  <script src="views/createtourpage.js"></script>
+  <script src="views/custompage.js"></script>
+  <script src="views/createsidebarlink.js"></script>
+  <script src="views/tourpages.js"></script>
+  <script src="views/restaurant.js"></script>
+  <script src="views/tourtravels.js"></script>
+  <script src="views/reports.js"></script>
+  <script src="views/analytics.js"></script>
+  <script src="views/settings.js"></script>
+  <script src="views/profile.js"></script>
+  <script src="views/calendar.js"></script>
+  <script src="views/notes.js"></script>
+  <script src="views/adminpanel.js"></script>
+  <script src="views/marketing.js"></script>
+  <script src="views/apnatourtravels.js"></script>
+  <script>
+    DB.loadAll().then(() => {
+      Router.init();
+    });
+
+  </script>
+</body>
+</html>
